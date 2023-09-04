@@ -12,16 +12,16 @@ local push = require '_packages.push'
 -- class https://github.com/vrld/hump/blob/master/class.lua
 Class = require '_packages.class'
 
-require 'GameObject.Bird'
-require 'GameObject.Pipe'
-require 'GameObject.PipePair'
+require 'scripts.GameObject.Bird'
+require 'scripts.GameObject.Pipe'
+require 'scripts.GameObject.PipePair'
 
-require 'State.StateMachine'
-require 'State.BaseState'
-require 'State.CountdownState'
-require 'State.PlayState'
-require 'State.TitleScreenState'
-require 'State.ScoreState'
+require 'scripts.State.StateMachine'
+require 'scripts.State.BaseState'
+require 'scripts.State.CountdownState'
+require 'scripts.State.PlayState'
+require 'scripts.State.TitleScreenState'
+require 'scripts.State.ScoreState'
 
 -- physical screen dimensions
 WINDOW_WIDTH = 1280
