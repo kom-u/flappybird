@@ -12,6 +12,7 @@ Class = require 'class'
 
 require 'Bird'
 require 'Pipe'
+require 'PipePair'
 
 -- physical screen dimensions
 WINDOW_WIDTH = 1280
@@ -32,13 +33,16 @@ local BACKGROUND_SCROLL_SPEED = 30
 local GROUND_SCROLL_SPEED = 60
 
 local BACKGROUND_LOOPING_POINT = 413
+local GROUND_LOOPING_POINT = 514
 
 --
 local bird = Bird()
 
-local pipes = {}
+local pipePairs = {}
 
-local spawnTimer = 0
+local spawnTimer = 2
+
+local lastY = -PIPE_HEIGHT + math.random(80) + 20
 
 
 
@@ -78,21 +82,26 @@ function love.update(dt)
         % BACKGROUND_LOOPING_POINT
 
     groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt)
-        % VIRTUAL_WIDTH
+        % GROUND_LOOPING_POINT
 
     spawnTimer = spawnTimer + dt
-    if spawnTimer > 4 then
-        table.insert(pipes, Pipe())
+    if spawnTimer > 3 then
+        local y = math.max(-PIPE_HEIGHT + 10, math.min(lastY + math.random(-20, 20), VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT))
+        lastY = y
+
+        table.insert(pipePairs, PipePair(y))
         spawnTimer = 0
     end
 
     bird:update(dt)
 
-    for key, pipe in pairs(pipes) do
-        pipe:update(dt)
+    for key, pipePair in pairs(pipePairs) do
+        pipePair:update(dt)
 
-        if pipe.x < -pipe.width then
-            table.remove(pipes, key)
+        for key, pipePair in pairs(pipePairs) do
+            if pipePair.remove then
+                table.remove(pipePairs, key)
+            end
         end
     end
 
@@ -107,11 +116,11 @@ function love.draw()
     love.graphics.draw(backgroundTexture, -backgroundScroll, 0)
 
     -- layer 1
-    for key, pipe in pairs(pipes) do
-        pipe:render()
+    for key, pipePair in pairs(pipePairs) do
+        pipePair:render()
     end
 
--- layer 2
+    -- layer 2
     love.graphics.draw(groundTexture, -groundScroll, VIRTUAL_HEIGHT - 16)
 
     -- layer 3
