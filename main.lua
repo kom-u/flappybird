@@ -2,17 +2,24 @@ _G.love = require("love")
 
 -- assets location
 ASSET_LOC = 'assets/'
+FONT_LOC = ASSET_LOC .. 'fonts/'
 TEXTURE_LOC = ASSET_LOC .. 'textures/'
 
--- libraries
+-- packages
 -- push https://github.com/Ulydev/push
-local push = require 'push'
+local push = require '_packages.push'
 -- class
-Class = require 'class'
+Class = require '_packages.class'
 
-require 'Bird'
-require 'Pipe'
-require 'PipePair'
+require 'GameObject.Bird'
+require 'GameObject.Pipe'
+require 'GameObject.PipePair'
+
+require 'State.StateMachine'
+require 'State.BaseState'
+require 'State.PlayState'
+require 'State.TitleScreenState'
+require 'State.ScoreState'
 
 -- physical screen dimensions
 WINDOW_WIDTH = 1280
@@ -36,15 +43,7 @@ local BACKGROUND_LOOPING_POINT = 413
 local GROUND_LOOPING_POINT = 514
 
 --
-local bird = Bird()
-
-local pipePairs = {}
-
-local spawnTimer = 2
-
-local lastY = -PIPE_HEIGHT + math.random(80) + 20
-
-local scrolling = true
+-- local scrolling = true
 
 
 
@@ -53,13 +52,32 @@ function love.load()
 
     love.window.setTitle('Flappy Bird')
 
-    math.randomseed(os.time())
+    -- init fonts
+    _G.smallFont = love.graphics.newFont(FONT_LOC .. 'font.ttf', 8)
+    _G.mediumFont = love.graphics.newFont(FONT_LOC .. 'flappy.ttf', 14)
+    _G.flappyFont = love.graphics.newFont(FONT_LOC .. 'flappy.ttf', 28)
+    _G.hugeFont = love.graphics.newFont(FONT_LOC .. 'flappy.ttf', 56)
+    love.graphics.setFont(flappyFont)
 
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
         resizable = true,
         vsync = true
     })
+
+    -- init state machine
+    _G.gStateMachine = StateMachine {
+        ['title'] = function()
+            return TitleScreenState()
+        end,
+        ['play'] = function()
+            return PlayState()
+        end,
+        ['score'] = function()
+            return ScoreState
+        end
+    }
+    gStateMachine:change('title')
 
     love.keyboard.keyPressed = {}
 end
@@ -80,39 +98,13 @@ function love.keyboard.wasPressed(key)
 end
 
 function love.update(dt)
-    if (scrolling) then
-        backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt)
-            % BACKGROUND_LOOPING_POINT
+    -- update background and ground scroll offsets
+    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) %
+        BACKGROUND_LOOPING_POINT
+    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % GROUND_LOOPING_POINT
 
-        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt)
-            % GROUND_LOOPING_POINT
-
-        spawnTimer = spawnTimer + dt
-        if spawnTimer > 3 then
-            local y = math.max(-PIPE_HEIGHT + 10,
-                math.min(lastY + math.random(-20, 20), VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT))
-            lastY = y
-
-            table.insert(pipePairs, PipePair(y))
-            spawnTimer = 0
-        end
-
-        bird:update(dt)
-
-        for k, pipePair in pairs(pipePairs) do
-            pipePair:update(dt)
-
-            for l, pipe in pairs(pipePair.pipes) do
-                if bird:isCollide(pipe) then
-                    scrolling = false
-                end
-            end
-
-            if pipePair.remove then
-                table.remove(pipePairs, k)
-            end
-        end
-    end
+    -- now, we just update the state machine, which defers to the right state
+    gStateMachine:update(dt)
 
     -- reset input table every frame
     love.keyboard.keyPressed = {}
@@ -125,15 +117,10 @@ function love.draw()
     love.graphics.draw(backgroundTexture, -backgroundScroll, 0)
 
     -- layer 1
-    for key, pipePair in pairs(pipePairs) do
-        pipePair:render()
-    end
+    gStateMachine:render()
 
     -- layer 2
     love.graphics.draw(groundTexture, -groundScroll, VIRTUAL_HEIGHT - 16)
-
-    -- layer 3
-    bird:render()
 
 
 
