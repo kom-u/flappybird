@@ -9,7 +9,7 @@ TEXTURE_LOC = ASSET_LOC .. 'textures/'
 -- packages
 -- push https://github.com/Ulydev/push
 local push = require '_packages.push'
--- class
+-- class https://github.com/vrld/hump/blob/master/class.lua
 Class = require '_packages.class'
 
 require 'GameObject.Bird'
@@ -100,6 +100,7 @@ function love.load()
     gStateMachine:change('title')
 
     love.keyboard.keyPressed = {}
+    love.mouse.buttonPressed = {}
 end
 
 function love.resize(w, h)
@@ -113,8 +114,16 @@ function love.keypressed(key)
     end
 end
 
+function love.mousepressed(x, y, button)
+    love.mouse.buttonPressed[button] = true
+end
+
 function love.keyboard.wasPressed(key)
     return love.keyboard.keyPressed[key]
+end
+
+function love.mouse.wasPressed(button)
+    return love.mouse.buttonPressed[button]
 end
 
 function love.update(dt)
@@ -128,6 +137,7 @@ function love.update(dt)
 
     -- reset input table every frame
     love.keyboard.keyPressed = {}
+    love.mouse.buttonPressed = {}
 end
 
 function love.draw()

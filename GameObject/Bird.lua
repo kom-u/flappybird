@@ -28,7 +28,7 @@ function Bird:update(dt)
     self.deltaY = self.deltaY + GRAVITY * dt
 
     -- add a sudden burst of negative gravity if we hit space
-    if love.keyboard.wasPressed('space') then
+    if love.keyboard.wasPressed('space') or love.mouse.wasPressed(1) then
         -- jump
         self.deltaY = -0.5
         audios['jump']:play()
