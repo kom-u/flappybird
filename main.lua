@@ -2,6 +2,7 @@ _G.love = require("love")
 
 -- assets location
 ASSET_LOC = 'assets/'
+AUDIO_LOC = ASSET_LOC .. 'audios/'
 FONT_LOC = ASSET_LOC .. 'fonts/'
 TEXTURE_LOC = ASSET_LOC .. 'textures/'
 
@@ -17,6 +18,7 @@ require 'GameObject.PipePair'
 
 require 'State.StateMachine'
 require 'State.BaseState'
+require 'State.CountdownState'
 require 'State.PlayState'
 require 'State.TitleScreenState'
 require 'State.ScoreState'
@@ -59,6 +61,21 @@ function love.load()
     _G.hugeFont = love.graphics.newFont(FONT_LOC .. 'flappy.ttf', 56)
     love.graphics.setFont(flappyFont)
 
+    -- init audios
+    _G.audios = {
+        ['jump'] = love.audio.newSource(AUDIO_LOC .. 'jump.wav', 'static'),
+        ['explosion'] = love.audio.newSource(AUDIO_LOC .. 'explosion.wav', 'static'),
+        ['hurt'] = love.audio.newSource(AUDIO_LOC .. 'hurt.wav', 'static'),
+        ['score'] = love.audio.newSource(AUDIO_LOC .. 'score.wav', 'static'),
+
+        -- https://freesound.org/people/xsgianni/sounds/388079/
+        ['music'] = love.audio.newSource(AUDIO_LOC .. 'marios_way.mp3', 'static')
+    }
+
+    -- play bgm audio
+    audios['music']:setLooping(true)
+    audios['music']:play()
+
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
         resizable = true,
@@ -69,6 +86,9 @@ function love.load()
     _G.gStateMachine = StateMachine {
         ['title'] = function()
             return TitleScreenState()
+        end,
+        ['countdown'] = function()
+            return CountdownState()
         end,
         ['play'] = function()
             return PlayState()
